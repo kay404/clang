@@ -1,0 +1,3 @@
+[submodule "tools/extra/fc"]
+	path = tools/extra/fc
+	url = https://github.com/eosio/fc
