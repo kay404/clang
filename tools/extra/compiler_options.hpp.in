@@ -441,6 +441,8 @@ static Options CreateOptions(bool add_defaults=true) {
 
 #ifndef ONLY_LD
 #ifdef CPP_COMP
+   if (!std_opt.empty())
+      comp_ss << " -std=" << std_opt << " ";
    if (faligned_allocation_opt)  
       comp_ss << " -faligned-allocation ";
    if (fcoroutine_ts_opt)  
