@@ -261,7 +261,7 @@ static std::string GetCompDefaults() {
    else if (boost::filesystem::exists(WhereAmI()+"/../lib/LLVMEosioApply"+eosio_apply_suff))
       apply_lib = WhereAmI()+"/../lib/LLVMEosioApply"+eosio_apply_suff;
    
-   std::string ret = " --target=wasm32 -nostdlib -ffreestanding -fno-builtin "
+   std::string ret = " --target=wasm32 -nostdlib -ffreestanding -fno-builtin -fno-threadsafe-statics "
 #ifdef CPP_COMP
           " -fno-rtti -fno-exceptions "
 #endif
