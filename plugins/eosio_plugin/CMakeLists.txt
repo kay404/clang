@@ -1,1 +1,1 @@
-add_llvm_loadable_module(eosio_plugin eosio_autogen.cpp PLUGIN_TOOL clang)
+add_llvm_loadable_module(eosio_plugin autogen_pass.cpp PLUGIN_TOOL clang)

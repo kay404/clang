@@ -14,6 +14,7 @@ extern char **environ;
 #include "whereami/whereami.hpp"
 #include <vector>
 #include <sstream>
+#include <fstream>
 
 namespace eosio { namespace cdt {
 

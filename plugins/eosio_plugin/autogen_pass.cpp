@@ -19,24 +19,38 @@
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/Support/raw_ostream.h"
+#include "eosio/autogen.hpp"
+#include <fstream>
+
 using namespace clang;
 
 namespace {
 
-class PrintFunctionsConsumer : public ASTConsumer {
+class eosio_autogen_consumer : public ASTConsumer {
   CompilerInstance &Instance;
   std::set<std::string> ParsedTemplates;
 
 public:
-  PrintFunctionsConsumer(CompilerInstance &Instance,
+  eosio_autogen_consumer(CompilerInstance &Instance,
                          std::set<std::string> ParsedTemplates)
       : Instance(Instance), ParsedTemplates(ParsedTemplates) {}
-
+   
   bool HandleTopLevelDecl(DeclGroupRef DG) override {
     for (DeclGroupRef::iterator i = DG.begin(), e = DG.end(); i != e; ++i) {
       const Decl *D = *i;
-      if (const NamedDecl *ND = dyn_cast<NamedDecl>(D))
+      const NamedDecl *ND = dyn_cast<NamedDecl>(D);
+      if (ND)
         llvm::errs() << "top-level-decl: \"" << ND->getNameAsString() << "\"\n";
+      if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D))
+         eosio::cdt::autogen::get().add_action(FD->getName().str());
+      llvm::dbgs() << "SPSP " << (uint64_t)&eosio::cdt::autogen::get() << "\n";
+      auto fn = Instance.getSourceManager().getFilename(D->getLocation());
+      auto fi = Instance.getSourceManager().getFileID(D->getLocation());
+      if (ND && !fn.empty()) {
+         std::fstream file(fn.str()+std::to_string(fi.getHashValue()), std::fstream::out | std::fstream::app);
+         file << ND->getName().str() << "\n";
+         file.close();
+      }
     }
 
     return true;
@@ -46,13 +60,6 @@ public:
     if (!Instance.getLangOpts().DelayedTemplateParsing)
       return;
 
-    // This demonstrates how to force instantiation of some templates in
-    // -fdelayed-template-parsing mode. (Note: Doing this unconditionally for
-    // all templates is similar to not using -fdelayed-template-parsig in the
-    // first place.)
-    // The advantage of doing this in HandleTranslationUnit() is that all
-    // codegen (when using -add-plugin) is completely finished and this can't
-    // affect the compiler output.
     struct Visitor : public RecursiveASTVisitor<Visitor> {
       const std::set<std::string> &ParsedTemplates;
       Visitor(const std::set<std::string> &ParsedTemplates)
@@ -77,19 +84,24 @@ public:
   }
 };
 
-class PrintFunctionNamesAction : public PluginASTAction {
+class eosio_autogen_action : public PluginASTAction {
   std::set<std::string> ParsedTemplates;
 protected:
   std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
                                                  llvm::StringRef) override {
-    return llvm::make_unique<PrintFunctionsConsumer>(CI, ParsedTemplates);
+    return llvm::make_unique<eosio_autogen_consumer>(CI, ParsedTemplates);
+  }
+
+  PluginASTAction::ActionType getActionType() override {
+     return AddAfterMainAction;
   }
 
   bool ParseArgs(const CompilerInstance &CI,
                  const std::vector<std::string> &args) override {
     for (unsigned i = 0, e = args.size(); i != e; ++i) {
       llvm::errs() << "PrintFunctionNames arg = " << args[i] << "\n";
-
+    }
+/*
       // Example error handling.
       DiagnosticsEngine &D = CI.getDiagnostics();
       if (args[i] == "-an-error") {
@@ -109,7 +121,7 @@ protected:
     }
     if (!args.empty() && args[0] == "help")
       PrintHelp(llvm::errs());
-
+*/
     return true;
   }
   void PrintHelp(llvm::raw_ostream& ros) {
@@ -120,5 +132,5 @@ protected:
 
 }
 
-static FrontendPluginRegistry::Add<PrintFunctionNamesAction>
-X("print-fns", "print function names");
+static FrontendPluginRegistry::Add<eosio_autogen_action>
+X("autogen", "auto generate apply and datastream operators");

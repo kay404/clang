@@ -279,6 +279,18 @@ static void GetCompDefaults(std::vector<std::string>& copts) {
    copts.emplace_back("-fno-rtti");
    copts.emplace_back("-fno-exceptions");
 #endif
+//   copts.emplace_back("-Xclang");
+//   copts.emplace_back("-load");
+//   copts.emplace_back("-Xclang");
+   if (llvm::sys::fs::exists(eosio::cdt::whereami::where()+"/eosio_plugin"+eosio_apply_suff))
+      copts.emplace_back("-fplugin="+eosio::cdt::whereami::where()+"/eosio_plugin"+eosio_apply_suff);
+   else if (llvm::sys::fs::exists(eosio::cdt::whereami::where()+"/../lib/eosio_plugin"+eosio_apply_suff))
+      copts.emplace_back("-fplugin="+eosio::cdt::whereami::where()+"/../lib/eosio_plugin"+eosio_apply_suff);
+//   copts.emplace_back("-Xclang");
+//   copts.emplace_back("-plugin");
+//   copts.emplace_back("-Xclang");
+//   copts.emplace_back("autogen");
+
    copts.emplace_back("-Xclang");
    copts.emplace_back("-load");
    copts.emplace_back("-Xclang");
