@@ -2998,6 +2998,10 @@ bool Expr::HasSideEffects(const ASTContext &Ctx,
   case OffsetOfExprClass:
   case ImplicitValueInitExprClass:
   case UnaryExprOrTypeTraitExprClass:
+  case ReflexprExprClass:
+  case MetaobjectIdExprClass:
+  case UnaryMetaobjectOpExprClass:
+  case NaryMetaobjectOpExprClass:
   case AddrLabelExprClass:
   case GNUNullExprClass:
   case ArrayInitIndexExprClass:

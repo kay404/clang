@@ -1012,6 +1012,9 @@ namespace serialization {
       PREDEF_TYPE_SAT_ULONG_FRACT_ID = 69,
 
       /// OpenCL image types with auto numeration
+      /// \brief The '__metaobject_id' type
+      PREDEF_TYPE_METAOBJECT_ID_ID = 44,
+      /// \brief OpenCL image types with auto numeration
 #define IMAGE_TYPE(ImgType, Id, SingletonId, Access, Suffix) \
       PREDEF_TYPE_##Id##_ID,
 #include "clang/Basic/OpenCLImageTypes.def"
@@ -1167,7 +1170,9 @@ namespace serialization {
       TYPE_DEPENDENT_SIZED_EXT_VECTOR = 46,
 
       /// A DependentAddressSpaceType record.
-      TYPE_DEPENDENT_ADDRESS_SPACE = 47
+      TYPE_DEPENDENT_ADDRESS_SPACE = 47,
+      /// \brief A UnrefltypeType record.
+      TYPE_UNREFLTYPE            = 48
     };
 
     /// The type IDs for special types constructed by semantic
@@ -1261,13 +1266,16 @@ namespace serialization {
 
       /// The internal '__type_pack_element' template.
       PREDEF_DECL_TYPE_PACK_ELEMENT_ID = 16,
+
+      /// \brief The internal '__unpack_metaobject_seq' template.
+      PREDEF_DECL_UNPACK_METAOBJECT_SEQ_ID = 17,
     };
 
     /// The number of declaration IDs that are predefined.
     ///
     /// For more information about predefined declarations, see the
     /// \c PredefinedDeclIDs type and the PREDEF_DECL_*_ID constants.
-    const unsigned int NUM_PREDEF_DECL_IDS = 17;
+    const unsigned int NUM_PREDEF_DECL_IDS = 18;
 
     /// Record of updates for a declaration that was modified after
     /// being deserialized. This can occur within DECLTYPES_BLOCK_ID.
@@ -1645,8 +1653,15 @@ namespace serialization {
 
       /// A SizefAlignOfExpr record.
       EXPR_SIZEOF_ALIGN_OF,
-
-      /// An ArraySubscriptExpr record.
+      /// \brief A Reflexpr record.
+      EXPR_REFLEXPR,
+      /// \brief A MetaobjectId record.
+      EXPR_METAOBJECT_ID,
+      /// \brief A UnaryMetaobjectOp record.
+      EXPR_UNARY_METAOBJECT_OP,
+      /// \brief A NaryMetaobjectOp record.
+      EXPR_NARY_METAOBJECT_OP,
+      /// \brief An ArraySubscriptExpr record.
       EXPR_ARRAY_SUBSCRIPT,
 
       /// A CallExpr record.

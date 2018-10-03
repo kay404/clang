@@ -1639,6 +1639,7 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
                       .Case("__is_target_vendor", true)
                       .Case("__is_target_os", true)
                       .Case("__is_target_environment", true)
+                      .Case("__unpack_metaobject_seq", LangOpts.CPlusPlus)
                       .Default(false);
         }
       });
