@@ -1,0 +1,121 @@
+// Declares clang::SyntaxOnlyAction.
+#include "clang/Frontend/FrontendActions.h"
+#include "clang/Tooling/CommonOptionsParser.h"
+#include "clang/Tooling/Tooling.h"
+#include "clang/Rewrite/Core/Rewriter.h"
+
+#include <iostream>
+#include <sstream>
+
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Path.h"
+#include "llvm/Support/Program.h"
+
+using namespace clang::tooling;
+using namespace llvm;
+
+#include <compiler_options.hpp>
+namespace eosio { namespace cdt {
+class eosio_tool {
+   public:
+      eosio_tool( const std::string& name ) : this_name(name) {}
+      inline bool is_eosio_cc()const { return this_name == "eosio-cc"; }
+      inline bool is_eosio_cpp()const { return this_name == "eosio-cpp"; }
+      inline bool is_eosio_ld()const { return this_name == "eosio-ld"; }
+      inline bool is_eosio_abigen()const { return this_name == "eosio-abigen"; }
+      tool_type   get_type()const { 
+         if (is_eosio_cpp())
+            return CXX;
+         if (is_eosio_ld())
+            return LD;
+         if (is_eosio_abigen())
+            return ABIGEN;
+         return CC;
+      }
+
+      inline std::string help_msg()const {
+         if ( is_eosio_cc() )
+            return "Eosio C -> WebAssembly C Compiler";
+         else if ( is_eosio_cpp() )
+            return "Eosio C++ -> WebAssembly C++ Compiler";
+         else if ( is_eosio_ld() )
+            return "Eosio LD -> WebAssembly Loader/Linker";
+         else if ( is_eosio_abigen() )
+            return "Eosio ABIGen -> Eosio ABI generator";
+      }
+      inline bool exists( const std::string& fn )const { return llvm::sys::fs::exists(fn); }
+      int run( int argc, const char* argv[] ) {
+         cl::SetVersionPrinter([&](llvm::raw_ostream& os) {
+               os << this_name << " version " << ${EOSIO_VER_MAJOR} << "." << ${EOSIO_VER_MINOR} << "." << ${EOSIO_VER_REVISION} << "\n";
+         });
+
+
+         std::vector<std::string> options;
+         for ( size_t i=0; i < argc; i++ )
+            options.push_back(argv[i]);
+
+         bool has_dash = false;
+         for ( auto opt : options ) {
+            if ( opt.compare("--") == 0 ) {
+               has_dash = true;
+               break;
+            }
+         }
+         
+         if ( !has_dash )
+            options.push_back("--");
+
+         tool_options tool_opts(get_type());
+         if ( is_eosio_cc() || is_eosio_cpp() ) {
+            tool_options::get_comp_defaults(options);
+         } else {
+            tool_options::get_ld_defaults(options);
+         }
+         
+         int size = options.size();
+         const char** new_argv = new const char*[size];
+         for ( size_t i=0; i < size; i++ )
+           new_argv[i] = options[i].c_str(); 
+
+         CommonOptionsParser opts( size, new_argv, tool_opts.options_cat, 0 );
+         //cl::ParseCommandLineOptions(argc, argv, this_name+" ("+help_msg()+")");
+         tool_opts.run();
+
+         if ( is_eosio_cc() || is_eosio_cpp() ) {
+            if ( !eosio::cdt::environment::exec_subprogram("clang-7", tool_opts.comp_options) )
+               return -1;
+            if ( !exists(tool_opts.output_filename) )
+               return -1;
+
+            if ( tool_opts.link ) {
+               if (!eosio::cdt::environment::exec_subprogram("eosio-ld", tool_opts.ld_options))
+                  return -1;
+               if ( !llvm::sys::fs::exists( tool_opts.output_filename ) )
+                  return -1;
+            }
+         }
+/*
+         if ( is_eosio_abigen() || tool_opts.abigen ) {
+            tool_opts.abigen_options.emplace(tool_opts.abigen_options.begin(), "-- -Wno-unused-command-line-argument");
+            tool_opts.abigen_options.emplace(tool_opts.abigen_options.begin(), "-contract="+tool_opts.abigen_contract);
+            std::string abigen_output = tool_opts.abigen_output.empty() ? tool_opts.output_fn.substr(0, tool_opts.output_fn.rfind(".wasm"))+".abi" : tool_opts.abigen_output;
+            tool_opts.abigen_options.emplace(tool_opts.abigen_options.begin(), "-output="+abigen_output);
+            tool_opts.abigen_options.insert(tool_opts.abigen_options.begin(), tool_opts.abigen_inputs);
+            if (!eosio::cdt::environment::exec_subprogram("eosio-abigen", tool_opts.abigen_options))
+               return -1;
+         }
+         */
+         return 0;
+      }
+   private:
+      clang::Rewriter rewriter;
+      std::string this_name = "eosio-tool";
+};
+
+}} // ns eosio::cdt
+
+int main(int argc, const char **argv) {
+   eosio::cdt::eosio_tool etool(llvm::sys::path::filename(argv[0]).str());
+   return etool.run(argc, argv);
+}
