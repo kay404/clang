@@ -1,4 +1,5 @@
-// Declares clang::SyntaxOnlyAction.
+#pragma once
+
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Tooling/CommonOptionsParser.h"
 #include "clang/Tooling/Tooling.h"
@@ -25,8 +26,8 @@
 #include "abi.hpp"
 #include <jsoncons/json.hpp>
 
-// Declares llvm::cl::extrahelp.
 #include "llvm/Support/CommandLine.h"
+
 using namespace clang::tooling;
 using namespace clang::ast_matchers;
 using namespace llvm;
@@ -41,11 +42,10 @@ struct abigen_exception : public std::exception {
    }
 } abigen_ex;
 
-
-DeclarationMatcher function_decl_matcher = cxxMethodDecl().bind("eosio_abis");
-DeclarationMatcher record_decl_matcher = cxxRecordDecl().bind("eosio_abis");
-DeclarationMatcher typedef_decl_matcher = typedefDecl().bind("eosio_abis");
-auto               class_tmp_matcher    = classTemplateSpecializationDecl().bind("eosio_abis");
+static DeclarationMatcher function_decl_matcher = cxxMethodDecl().bind("eosio_abis");
+static DeclarationMatcher record_decl_matcher = cxxRecordDecl().bind("eosio_abis");
+static DeclarationMatcher typedef_decl_matcher = typedefDecl().bind("eosio_abis");
+static auto               class_tmp_matcher    = classTemplateSpecializationDecl().bind("eosio_abis");
 
 class abigen : public generation_utils {
    public:
@@ -318,6 +318,9 @@ class abigen : public generation_utils {
       o["abi_extensions"]     = ojson::array();
       return o;
    }
+   
+   int run( int argc, char** argv ) {
+   }
 
    abi& get_abi_ref() { return _abi; }
 
@@ -409,88 +412,4 @@ class EosioRecordMatcher : public MatchFinder::MatchCallback {
             }
          }
       }
-
-
 };
-
-int main(int argc, const char **argv) {
-
-   cl::SetVersionPrinter([](llvm::raw_ostream& os) {
-        os << "eosio-abigen version " << ${EOSIO_VER_MAJOR} << "." << ${EOSIO_VER_MINOR} << "." << ${EOSIO_VER_REVISION} << "\n";
-  });
-   cl::OptionCategory cat("eosio-abigen", "generates an abi from C++ project input");
-
-   cl::opt<std::string> abidir(
-    "output",
-    cl::desc("Set the output filename and fullpath"),
-    cl::Required,
-    cl::cat(cat));
-   cl::opt<std::string> contract_name(
-    "contract",
-    cl::desc("Set the contract name"),
-    cl::Required,
-    cl::cat(cat));
-   cl::opt<bool> def(
-    "default",
-    cl::desc("<ignored>"),
-    cl::Hidden,
-    cl::cat(cat));
-
-   std::vector<std::string> options;
-   for (size_t i=0; i < argc; i++) {
-      options.push_back(argv[i]);
-   }
-   bool has_dash_dash = false;
-   for (auto opt : options) {
-      if ( opt.compare("--") == 0 ) {
-         has_dash_dash = true;
-         break;
-      }
-   }
-   if (!has_dash_dash)
-      options.push_back("--");
-   options.push_back("--target=wasm32");
-   options.push_back("-nostdlib");
-   options.push_back("-ffreestanding");
-   options.push_back("-fno-builtin");
-   options.push_back("-fno-rtti");
-   options.push_back("-fno-exceptions");
-   options.push_back("-Wno-everything");
-   options.push_back("-std=c++17");
-   options.push_back(std::string("-I")+eosio::cdt::whereami::where()+"/../include/libcxx");
-   options.push_back(std::string("-I")+eosio::cdt::whereami::where()+"/../include/libc");
-   options.push_back(std::string("-I")+eosio::cdt::whereami::where()+"/../include");
-   options.push_back(std::string("-I")+eosio::cdt::whereami::where()+"/../../../../../libraries/libc++/libcxx/include");
-   options.push_back(std::string("-I")+eosio::cdt::whereami::where()+"/../../../../../libraries/libc/musl/include");
-   options.push_back(std::string("-I")+eosio::cdt::whereami::where()+"/../../../../../libraries");
-   options.push_back(std::string("-I")+eosio::cdt::whereami::where()+"/../../../../../libraries/boost/include");
-
-   int size = options.size();
-   const char** new_argv = new const char*[size];
-   for (size_t i=0; i < size; i++)
-      new_argv[i] = options[i].c_str();
-
-   CommonOptionsParser opts( size, new_argv, cat, 0 );
-
-   ClangTool tool( opts.getCompilations(), opts.getSourcePathList());
-   get_abigen_ref().set_contract_name(contract_name);
-   EosioMethodMatcher eosio_method_matcher;
-   EosioRecordMatcher eosio_record_matcher;
-   MatchFinder finder;
-   finder.addMatcher(function_decl_matcher, &eosio_method_matcher);
-   finder.addMatcher(record_decl_matcher, &eosio_record_matcher);
-   finder.addMatcher(class_tmp_matcher, &eosio_record_matcher);
-
-   int tool_run = -1;
-   try {
-      tool_run = tool.run(newFrontendActionFactory(&finder).get());
-      std::ofstream output(abidir);
-      output << pretty_print(get_abigen_ref().to_json());
-      output.close();
-   } catch (std::exception& ex) {
-      std::cout << ex.what() << "\n";
-      tool_run = -1;
-   } 
-
-   return tool_run;
-}

@@ -12,4 +12,6 @@ target_link_libraries(eosio-tool PRIVATE
   clangBasic
   clangASTMatchers)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tool_options.hpp.in ${CMAKE_BINARY_DIR}/tool_options.hpp)
+
 install(FILES ${CMAKE_BINARY_DIR}/bin/eosio-tool DESTINATION ${CMAKE_INSTALL_BINDIR} PERMISSIONS OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
