@@ -28,6 +28,8 @@
 
 #include "llvm/Support/CommandLine.h"
 
+namespace eosio { namespace cdt { 
+
 using namespace clang::tooling;
 using namespace clang::ast_matchers;
 using namespace llvm;
@@ -37,18 +39,20 @@ using jsoncons::json;
 using jsoncons::ojson;
 
 struct abigen_exception : public std::exception {
-   virtual const char* what() const throw() {
+   virtual const char* what()const throw() {
       return "eosio.abigen fatal error";
    }
-} abigen_ex;
+};
 
-static DeclarationMatcher function_decl_matcher = cxxMethodDecl().bind("eosio_abis");
-static DeclarationMatcher record_decl_matcher = cxxRecordDecl().bind("eosio_abis");
-static DeclarationMatcher typedef_decl_matcher = typedefDecl().bind("eosio_abis");
-static auto               class_tmp_matcher    = classTemplateSpecializationDecl().bind("eosio_abis");
+extern abigen_exception abigen_ex;
+extern DeclarationMatcher function_decl_matcher;
+extern DeclarationMatcher record_decl_matcher;
+extern DeclarationMatcher typedef_decl_matcher;
+extern DeclarationMatcher class_tmp_matcher;
 
 class abigen : public generation_utils {
    public:
+
    abigen() : generation_utils([&](){throw abigen_ex;}) {}
    void add_typedef( const clang::QualType& t ) {
       abi_typedef ret;
@@ -319,9 +323,6 @@ class abigen : public generation_utils {
       return o;
    }
    
-   int run( int argc, char** argv ) {
-   }
-
    abi& get_abi_ref() { return _abi; }
 
    void set_contract_name( const std::string& cn ) { contract_name = cn; }
@@ -334,17 +335,19 @@ class abigen : public generation_utils {
       std::string contract_name;
 };
 
-abigen& get_abigen_ref() {
-   static abigen ag;
-   return ag;
-}
+class codegen : generation_utils {
+};
+
+abigen& get_abigen_ref();
+//codegen& get_codegen_ref();
 
 class EosioMethodMatcher : public MatchFinder::MatchCallback {
    public:
       virtual void run( const MatchFinder::MatchResult& res ) {
-         if (const clang::CXXMethodDecl* decl = res.Nodes.getNodeAs<clang::CXXMethodDecl>("eosio_abis")->getCanonicalDecl()) {
+         if (const clang::CXXMethodDecl* decl = res.Nodes.getNodeAs<clang::CXXMethodDecl>("eosio")->getCanonicalDecl()) {
             abi abi;
             if (decl->isEosioAction() && abigen::is_eosio_contract(decl, get_abigen_ref().get_contract_name())) {
+//               get_codegen_ref().emit_action(decl);
                get_abigen_ref().add_struct(decl);
                get_abigen_ref().add_action(decl);
                auto params = decl->parameters();
@@ -371,7 +374,7 @@ class EosioMethodMatcher : public MatchFinder::MatchCallback {
 class EosioRecordMatcher : public MatchFinder::MatchCallback {
    public:
       virtual void run( const MatchFinder::MatchResult& res ) {
-         if (const clang::CXXRecordDecl* decl = res.Nodes.getNodeAs<clang::CXXRecordDecl>("eosio_abis")) {
+         if (const clang::CXXRecordDecl* decl = res.Nodes.getNodeAs<clang::CXXRecordDecl>("eosio")) {
             if (decl->isEosioAction() && abigen::is_eosio_contract(decl, get_abigen_ref().get_contract_name())) {
                get_abigen_ref().add_struct(decl);
                get_abigen_ref().add_action(decl);
@@ -405,7 +408,7 @@ class EosioRecordMatcher : public MatchFinder::MatchCallback {
             }
          }
       
-         if (const clang::ClassTemplateSpecializationDecl* decl = res.Nodes.getNodeAs<clang::ClassTemplateSpecializationDecl>("eosio_abis")) {
+         if (const clang::ClassTemplateSpecializationDecl* decl = res.Nodes.getNodeAs<clang::ClassTemplateSpecializationDecl>("eosio")) {
             if ( decl->getName() == "multi_index" ) {
                get_abigen_ref().add_table(decl->getTemplateArgs()[0].getAsIntegral().getExtValue(),
                                          (clang::CXXRecordDecl*)((clang::RecordType*)decl->getTemplateArgs()[1].getAsType().getTypePtr())->getDecl());
@@ -413,3 +416,5 @@ class EosioRecordMatcher : public MatchFinder::MatchCallback {
          }
       }
 };
+
+}} //namespace eosio::cdt

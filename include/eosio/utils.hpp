@@ -17,7 +17,7 @@ extern char **environ;
 
 namespace eosio { namespace cdt {
 
-uint64_t char_to_symbol( char c ) {
+inline uint64_t char_to_symbol( char c ) {
    if( c >= 'a' && c <= 'z' )
       return (c - 'a') + 6;
    if( c >= '1' && c <= '5' )
@@ -25,7 +25,7 @@ uint64_t char_to_symbol( char c ) {
    return 0;
 }
 
-uint64_t string_to_name( const char* str )
+inline uint64_t string_to_name( const char* str )
 {
    uint64_t name = 0;
    int i = 0;
@@ -78,7 +78,7 @@ void validate_name( const std::string& str, Lambda&& error_handler ) {
    }
 }
 
-std::string name_to_string( uint64_t nm ) {
+inline std::string name_to_string( uint64_t nm ) {
    static const char* charmap = ".12345abcdefghijklmnopqrstuvwxyz";
    std::string str(13,'.');
 

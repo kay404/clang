@@ -109,6 +109,7 @@ struct generation_utils {
             return tst->getArg(0).getAsType();
          std::cout << "Internal error, wrong type of template specialization\n";
          error_handler();
+         return type;
       };
       if (auto pt = llvm::dyn_cast<clang::ElaboratedType>(type.getTypePtr()))
          return ret(pt->desugar().getTypePtr());
@@ -118,7 +119,7 @@ struct generation_utils {
    std::string get_base_type_name( const clang::QualType& type ) {
       clang::QualType newType = type;
       std::string type_str = newType.getNonReferenceType().getAsString();
-      int i = type_str.length()-1;
+      size_t i = type_str.length()-1;
       for (; i > 0; i--) {
          if (type_str[i] == ':') {
             return type_str.substr(i+1); 

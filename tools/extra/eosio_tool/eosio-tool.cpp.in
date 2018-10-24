@@ -15,7 +15,9 @@
 using namespace clang::tooling;
 using namespace llvm;
 
-#include <compiler_options.hpp>
+#include "tool_options.hpp"
+#include "generator.hpp"
+
 namespace eosio { namespace cdt {
 class eosio_tool {
    public:
@@ -49,6 +51,7 @@ class eosio_tool {
          else if ( is_eosio_abigen() )
             return "Eosio ABIGen -> Eosio ABI generator";
       }
+
       inline bool exists( const std::string& fn )const { return llvm::sys::fs::exists(fn); }
 
       int run_linker( tool_options& tool_opts ) {
@@ -82,22 +85,61 @@ class eosio_tool {
          for ( int i=0; i < argc; i++ )
             options.push_back(argv[i]);
 
-         options.push_back("--");
-
          tool_options tool_opts(get_type());
-         if ( is_eosio_cc() || is_eosio_cpp() ) {
+         if ( is_eosio_cc() || is_eosio_cpp() || is_eosio_abigen() ) {
             tool_options::get_comp_defaults(options);
          } else {
             tool_options::get_ld_defaults(options);
          }
 
-         int size = options.size();
-         const char** new_argv = new const char*[size];
-         for ( int i=0; i < size; i++ )
-           new_argv[i] = options[i].c_str(); 
-
-         CommonOptionsParser opts( size, new_argv, tool_opts.options_cat, 0 );
+         cl::ParseCommandLineOptions(argc, argv, "("+help_msg()+")");
          tool_opts.run();
+
+         std::vector<std::string> new_args = {options[0]};
+         options.erase(options.begin());
+         for ( auto in : tool_opts.inputs )
+            new_args.push_back(in.c_str());
+         new_args.push_back("--");
+         for ( int i=0; i < tool_opts.comp_options.size(); i++ )
+           new_args.push_back(tool_opts.comp_options[i].c_str()); 
+         tool_options::get_comp_defaults(new_args);
+         for ( int i=0; i < new_args.size(); i++ )
+            std::cout << new_args[i] << '\n';
+
+         const char* new_argv[new_args.size()];
+         for ( int i=0; i < new_args.size(); i++ )
+            new_argv[i] = new_args[i].c_str();
+         llvm::cl::OptionCategory null_cat("null options");
+         int size = new_args.size();
+         CommonOptionsParser opts( size, new_argv, null_cat, 0 );
+
+         if ( is_eosio_abigen() || tool_opts.abigen ) {
+            ClangTool tool( opts.getCompilations(), opts.getSourcePathList());
+            get_abigen_ref().set_contract_name(tool_opts.abigen_contract);
+            EosioMethodMatcher eosio_method_matcher;
+            EosioRecordMatcher eosio_record_matcher;
+            MatchFinder finder;
+            finder.addMatcher(function_decl_matcher, &eosio_method_matcher);
+            finder.addMatcher(record_decl_matcher, &eosio_record_matcher);
+            finder.addMatcher(class_tmp_matcher, &eosio_record_matcher);
+
+            try {
+               if (tool.run(newFrontendActionFactory(&finder).get()) == error)
+                  return error;
+               std::string outs = tool_opts.abigen_output.empty() ? tool_opts.output_filename.substr(0, tool_opts.output_filename.rfind(".wasm"))+".abi" : tool_opts.abigen_output;
+               std::ofstream output(outs);
+               output << pretty_print(get_abigen_ref().to_json());
+               output.close();
+            } catch ( const std::exception& ex) {
+               std::cerr << ex.what() << "\n";
+               return error;
+            } catch (const std::string& s) {
+               std::cerr << s << "\n";
+               return error;
+            }
+            if (is_eosio_abigen())
+               return success;
+         }
 
          if ( is_eosio_cc() || is_eosio_cpp() ) {
             for (auto def : options) {

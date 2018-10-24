@@ -243,15 +243,14 @@ struct tool_options {
                   sysroot, "Set the system root directory", options_cat,
                   [&]() {
                      if (!sysroot_opt.empty()) {
-                        comp_options.emplace_back("--sysroot "+sysroot_opt);
                         comp_options.emplace_back("-I"+sysroot_opt+"/include/libcxx");
                         comp_options.emplace_back("-I"+sysroot_opt+"/include/libc");
                         ld_options.emplace_back("-L"+sysroot_opt+"/lib");
                         ld_options.emplace_back("-L"+sysroot_opt+"/lib64");
                      } else {
-                        comp_options.emplace_back("--sysroot "+eosio::cdt::whereami::where()+"/../");
                         comp_options.emplace_back("-I"+eosio::cdt::whereami::where()+"/../include/libcxx");
                         comp_options.emplace_back("-I"+eosio::cdt::whereami::where()+"/../include/libc");
+                        comp_options.emplace_back("-I"+eosio::cdt::whereami::where()+"/../include");
                         ld_options.emplace_back("-L"+eosio::cdt::whereami::where()+"/../lib");
                         ld_options.emplace_back("-L"+eosio::cdt::whereami::where()+"/../lib64");
                      }
@@ -355,9 +354,15 @@ struct tool_options {
                      else
                         output_filename = o_opt;
             });
+            POSLIST(std::string, input_filename_opt,
+                  "<input file> ...", cl::ZeroOrMore, options_cat,
+                  [&]() {
+                     for (auto in : input_filename_opt) {
+                        inputs.push_back(in);
+                     }
+            });
       };
    } 
-
    void run() {
       for ( auto cb = option_callbacks.rbegin(); cb != option_callbacks.rend(); cb++ )
          (*cb)();
