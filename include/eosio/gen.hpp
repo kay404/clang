@@ -225,7 +225,11 @@ struct generation_utils {
    }
 
    inline std::string translate_type( const clang::QualType& type ) {
-      if ( is_template_specialization( type, {"vector", "set"} ) ) {
+      if ( is_template_specialization( type, {"binary_extension"} ) ) {
+         auto t = _translate_type(get_template_argument( type ));
+         return t+"$";
+      }
+      else if ( is_template_specialization( type, {"vector", "set"} ) ) {
          auto t =_translate_type(get_template_argument( type ));
          return t=="int8" ? "bytes" : t+"[]";
       }

@@ -39,6 +39,12 @@ struct abi_table {
    bool operator<(const abi_table& t) const { return name < t.name; }
 };
 
+struct abi_variant {
+   std::string name;
+   std::vector<std::string> types;
+   bool operator<(const abi_variant& t) const { return name < t.name; }
+};
+
 struct abi_error_message {
    uint64_t    error_code;
    std::string error_msg;
@@ -51,6 +57,7 @@ struct abi {
    std::set<abi_typedef> typedefs;
    std::set<abi_action>  actions;
    std::set<abi_table>   tables;
+   std::set<abi_variant> variants;
    std::vector<abi_error_message> error_messages;
 };
 

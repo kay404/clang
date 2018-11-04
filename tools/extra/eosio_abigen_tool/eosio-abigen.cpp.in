@@ -223,6 +223,16 @@ class abigen : public generation_utils {
       t.name = name_to_string(name);
       _abi.tables.insert(t);
    }
+   
+   void add_variant( const clang::QualType& t ) {
+      abi_variant var;
+      auto pt = llvm::dyn_cast<clang::ElaboratedType>(t.getTypePtr());
+      auto tst = llvm::dyn_cast<clang::TemplateSpecializationType>(pt->desugar().getTypePtr());
+      var.name = get_type(t);
+      for (int i=0; i < tst->getNumArgs(); ++i)
+         var.types.push_back(translate_type(get_template_argument( t, i )));
+      _abi.variants.insert(var); 
+   }
 
    void add_type( const clang::QualType& t ) {
       clang::QualType type(t);
@@ -230,17 +240,18 @@ class abigen : public generation_utils {
       if (!is_builtin_type(type)) {
          if (is_aliasing(type))
             add_typedef(type);
-         else if (is_template_specialization(type, {"vector", "set", "optional"}))
-               add_type(get_template_argument(type));
+         else if (is_template_specialization(type, {"vector", "set", "optional", "binary_extension"}))
+            add_type(get_template_argument(type));
          else if (is_template_specialization(type, {"map"}))
             add_map(type);
          else if (is_template_specialization(type, {"pair"}))
             add_pair(type);
          else if (is_template_specialization(type, {"tuple"}))
             add_tuple(type);
-         else if (is_template_specialization(type, {})) {
+         else if (is_template_specialization(type, {"variant"}))
+            add_variant(type);
+         else if (is_template_specialization(type, {}))
             add_struct(type.getTypePtr()->getAsCXXRecordDecl(), get_template_name(type));
-         }
          else if (type.getTypePtr()->isRecordType())
             add_struct(type.getTypePtr()->getAsCXXRecordDecl());
       }
@@ -285,7 +296,15 @@ class abigen : public generation_utils {
       return o;
    }
 
-
+   ojson variant_to_json( const abi_variant& v ) {
+      ojson o;
+      o["name"] = v.name;
+      o["types"] = ojson::array();
+      for ( auto ty : v.types ) {
+         o["types"].push_back( ty );
+      }
+      return o;
+   }
 
    ojson table_to_json( const abi_table& t ) {
       ojson o;
@@ -305,7 +324,7 @@ class abigen : public generation_utils {
       auto remove_suffix = [&]( std::string name ) {
          int i = name.length()-1;
          for (; i >= 0; i--) 
-            if ( name[i] != '[' && name[i] != ']' && name[i] != '?' )
+            if ( name[i] != '[' && name[i] != ']' && name[i] != '?' && name[i] != '$' )
                break;
          return name.substr(0,i+1);
       };
@@ -388,6 +407,10 @@ class abigen : public generation_utils {
       for ( auto t : set_of_tables ) {
          o["tables"].push_back(table_to_json( t ));
       }
+      o["variants"]   = ojson::array();
+      for ( auto v : _abi.variants ) {
+         o["variants"].push_back(variant_to_json( v ));
+      }
 
       o["ricardian_clauses"]  = ojson::array();
       o["abi_extensions"]     = ojson::array();
@@ -436,14 +459,14 @@ class EosioRecordMatcher : public MatchFinder::MatchCallback {
                get_abigen_ref().add_struct(decl);
                get_abigen_ref().add_action(decl);
                for (auto field : decl->fields()) {
-                  get_abigen_ref().add_type( field->getType() );
+                  get_abigen_ref().add_type(field->getType());
                }
             }
             if (decl->isEosioTable() && abigen::is_eosio_contract(decl, get_abigen_ref().get_contract_name())) {
                get_abigen_ref().add_struct(decl);
                get_abigen_ref().add_table(decl);
                for (auto field : decl->fields())
-                  get_abigen_ref().add_type( field->getType() );
+                  get_abigen_ref().add_type(field->getType());
             }
          }
       
