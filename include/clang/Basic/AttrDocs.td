@@ -873,6 +873,13 @@ The ``eosio::contract`` attribute marks a method as being an eosio contract.
   }];
 }
 
+def EosioWasmEntryDocs : Documentation {
+   let Category = DocCatFunction;
+   let Content  = [{
+      The ``eosio::wasm_entry`` attribute marks a function as a wasm entry.
+   }];
+}
+
 def EosioActionDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{

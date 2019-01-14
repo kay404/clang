@@ -1938,7 +1938,8 @@ public:
 
   void getNameForDiagnostic(raw_ostream &OS, const PrintingPolicy &Policy,
                             bool Qualified) const override;
-
+   
+  bool isEosioWasmEntry()const;
   void setRangeEnd(SourceLocation E) { EndRangeLoc = E; }
 
   SourceRange getSourceRange() const override LLVM_READONLY;

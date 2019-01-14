@@ -2394,10 +2394,14 @@ llvm::Constant *CodeGenModule::GetOrCreateLLVMFunction(
     bool DontDefer, bool IsThunk, llvm::AttributeList ExtraAttrs,
     ForDefinition_t IsForDefinition) {
   const Decl *D = GD.getDecl();
+  
+  bool isWasmEntry = false;
 
   // Any attempts to use a MultiVersion function should result in retrieving
   // the iFunc instead. Name Mangling will handle the rest of the changes.
   if (const FunctionDecl *FD = cast_or_null<FunctionDecl>(D)) {
+    if (FD->hasAttr<EosioWasmEntryAttr>())
+       isWasmEntry = true;
     // For the device mark the function as one that should be emitted.
     if (getLangOpts().OpenMPIsDevice && OpenMPRuntime &&
         !OpenMPRuntime->markAsGlobalTarget(GD) && FD->isDefined() &&
@@ -2513,7 +2517,9 @@ llvm::Constant *CodeGenModule::GetOrCreateLLVMFunction(
     llvm::AttrBuilder B(ExtraAttrs, llvm::AttributeList::FunctionIndex);
     F->addAttributes(llvm::AttributeList::FunctionIndex, B);
   }
-
+   
+  if (isWasmEntry)
+     F->addFnAttr("eosio_wasm_entry", "true");
   if (!DontDefer) {
     // All MSVC dtors other than the base dtor are linkonce_odr and delegate to
     // each other bottoming out with the base dtor.  Therefore we emit non-base

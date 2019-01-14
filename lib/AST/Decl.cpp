@@ -4293,6 +4293,8 @@ ImplicitParamDecl *ImplicitParamDecl::CreateDeserialized(ASTContext &C,
   return new (C, ID) ImplicitParamDecl(C, QualType(), ImplicitParamKind::Other);
 }
 
+bool FunctionDecl::isEosioWasmEntry()const { return hasAttr<EosioWasmEntryAttr>(); }
+
 FunctionDecl *FunctionDecl::Create(ASTContext &C, DeclContext *DC,
                                    SourceLocation StartLoc,
                                    const DeclarationNameInfo &NameInfo,
