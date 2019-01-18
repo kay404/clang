@@ -4294,6 +4294,7 @@ ImplicitParamDecl *ImplicitParamDecl::CreateDeserialized(ASTContext &C,
 }
 
 bool FunctionDecl::isEosioWasmEntry()const { return hasAttr<EosioWasmEntryAttr>(); }
+bool FunctionDecl::isEosioWasmImport()const { return hasAttr<EosioWasmImportAttr>(); }
 
 FunctionDecl *FunctionDecl::Create(ASTContext &C, DeclContext *DC,
                                    SourceLocation StartLoc,

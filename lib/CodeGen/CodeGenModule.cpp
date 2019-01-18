@@ -1150,7 +1150,7 @@ void CodeGenModule::SetLLVMFunctionAttributesForDefinition(const Decl *D,
     else if (LangOpts.getStackProtector() == LangOptions::SSPReq)
       B.addAttribute(llvm::Attribute::StackProtectReq);
   }
-
+   
   if (!D) {
     // If we don't have a declaration to control inlining, the function isn't
     // explicitly marked as alwaysinline for semantic reasons, and inlining is
@@ -2402,6 +2402,13 @@ llvm::Constant *CodeGenModule::GetOrCreateLLVMFunction(
   if (const FunctionDecl *FD = cast_or_null<FunctionDecl>(D)) {
     if (FD->hasAttr<EosioWasmEntryAttr>())
        isWasmEntry = true;
+  bool isWasmImport = false;
+  // Any attempts to use a MultiVersion function should result in retrieving
+  // the iFunc instead. Name Mangling will handle the rest of the changes.
+  if (const FunctionDecl *FD = cast_or_null<FunctionDecl>(D)) {
+     if (FD->hasAttr<EosioWasmImportAttr>())
+        isWasmImport = true;
+
     // For the device mark the function as one that should be emitted.
     if (getLangOpts().OpenMPIsDevice && OpenMPRuntime &&
         !OpenMPRuntime->markAsGlobalTarget(GD) && FD->isDefined() &&
@@ -2520,6 +2527,9 @@ llvm::Constant *CodeGenModule::GetOrCreateLLVMFunction(
    
   if (isWasmEntry)
      F->addFnAttr("eosio_wasm_entry", "true");
+  if (isWasmImport)
+   F->addFnAttr("eosio_wasm_import", "true");
+
   if (!DontDefer) {
     // All MSVC dtors other than the base dtor are linkonce_odr and delegate to
     // each other bottoming out with the base dtor.  Therefore we emit non-base

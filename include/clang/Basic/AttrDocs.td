@@ -880,6 +880,13 @@ def EosioWasmEntryDocs : Documentation {
    }];
 }
 
+def EosioWasmImportDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``eosio::wasm_import`` attribute marks a function as a wasm import.
+  }];
+}
+
 def EosioActionDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{

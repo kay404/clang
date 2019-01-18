@@ -5871,6 +5871,8 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
     break;
   case AttributeList::AT_EosioWasmEntry:
     handleSimpleAttribute<EosioWasmEntryAttr>(S, D, AL);
+  case AttributeList::AT_EosioWasmImport:
+    handleSimpleAttribute<EosioWasmImportAttr>(S, D, AL);
     break;
   case AttributeList::AT_EosioIgnore:
     handleSimpleAttribute<EosioIgnoreAttr>(S, D, AL);
