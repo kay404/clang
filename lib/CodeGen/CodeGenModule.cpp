@@ -2396,17 +2396,14 @@ llvm::Constant *CodeGenModule::GetOrCreateLLVMFunction(
   const Decl *D = GD.getDecl();
   
   bool isWasmEntry = false;
+  bool isWasmImport = false;
 
   // Any attempts to use a MultiVersion function should result in retrieving
   // the iFunc instead. Name Mangling will handle the rest of the changes.
   if (const FunctionDecl *FD = cast_or_null<FunctionDecl>(D)) {
     if (FD->hasAttr<EosioWasmEntryAttr>())
        isWasmEntry = true;
-  bool isWasmImport = false;
-  // Any attempts to use a MultiVersion function should result in retrieving
-  // the iFunc instead. Name Mangling will handle the rest of the changes.
-  if (const FunctionDecl *FD = cast_or_null<FunctionDecl>(D)) {
-     if (FD->hasAttr<EosioWasmImportAttr>())
+    if (FD->hasAttr<EosioWasmImportAttr>())
         isWasmImport = true;
 
     // For the device mark the function as one that should be emitted.
@@ -2527,8 +2524,9 @@ llvm::Constant *CodeGenModule::GetOrCreateLLVMFunction(
    
   if (isWasmEntry)
      F->addFnAttr("eosio_wasm_entry", "true");
+
   if (isWasmImport)
-   F->addFnAttr("eosio_wasm_import", "true");
+     F->addFnAttr("eosio_wasm_import", "true");
 
   if (!DontDefer) {
     // All MSVC dtors other than the base dtor are linkonce_odr and delegate to
