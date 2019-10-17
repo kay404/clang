@@ -880,6 +880,27 @@ The ``eosio::wasm_import`` attribute marks a function as a wasm import.
   }];
 }
 
+def EosioSignalDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``eosio::signal`` attribute marks a method as being an eosio notification signal.
+  }];
+}
+
+def EosioSlotDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``eosio::slot`` attribute marks a method as being an eosio notification slot.
+  }];
+}
+
+def EosioEventDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``eosio::event`` attribute marks a method as being an eosio notification event to eosio.null.
+  }];
+}
+
 def EosioActionDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{

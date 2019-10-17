@@ -990,6 +990,27 @@ def EosioWasmImport : InheritableAttr {
    let Documentation = [EosioWasmImportDocs];
 }
 
+def EosioSignal : InheritableAttr {
+   let Spellings = [CXX11<"eosio", "signal">, GNU<"eosio_signal">];
+   let Args = [StringArgument<"name", 1>];
+   let Subjects = SubjectList<[CXXMethod, Function]>;
+   let Documentation = [EosioSignalDocs];
+}
+
+def EosioSlot : InheritableAttr {
+   let Spellings = [CXX11<"eosio", "slot">, GNU<"eosio_slot">];
+   let Args = [StringArgument<"name", 1>];
+   let Subjects = SubjectList<[CXXMethod, Function]>;
+   let Documentation = [EosioSlotDocs];
+}
+
+def EosioEvent : InheritableAttr {
+   let Spellings = [CXX11<"eosio", "event">, GNU<"eosio_event">];
+   let Args = [StringArgument<"name", 1>];
+   let Subjects = SubjectList<[CXXMethod, Function]>;
+   let Documentation = [EosioEventDocs];
+}
+
 def EosioAction : InheritableAttr {
    let Spellings = [CXX11<"eosio", "action">, GNU<"eosio_action">];
    let Args = [StringArgument<"name", 1>];

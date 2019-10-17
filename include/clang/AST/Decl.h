@@ -1950,6 +1950,13 @@ public:
   bool isEosioWasmNotify()const;
   std::string getEosioWasmNotify()const;
 
+  bool isEosioSignal()const;
+  std::string getEosioSignal()const;
+  bool isEosioSlot()const;
+  std::string getEosioSlot()const;
+  bool isEosioEvent()const;
+  std::string getEosioEvent()const;
+
   SourceRange getSourceRange() const override LLVM_READONLY;
 
   // Function definitions.
