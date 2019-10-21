@@ -4301,6 +4301,13 @@ bool FunctionDecl::isEosioWasmAction()const { return hasAttr<EosioWasmActionAttr
 std::string FunctionDecl::getEosioWasmAction()const { return getAttr<EosioWasmActionAttr>()->getName(); }
 bool FunctionDecl::isEosioWasmNotify()const { return hasAttr<EosioWasmNotifyAttr>(); }
 std::string FunctionDecl::getEosioWasmNotify()const { return getAttr<EosioWasmNotifyAttr>()->getName(); }
+bool FunctionDecl::isEosioSignal()const { return hasAttr<EosioSignalAttr>(); }
+std::string FunctionDecl::getEosioSignal()const { return getAttr<EosioSignalAttr>()->getName(); }
+bool FunctionDecl::isEosioSlot()const { return hasAttr<EosioSlotAttr>(); }
+std::string FunctionDecl::getEosioSlot()const { return getAttr<EosioSlotAttr>()->getName(); }
+bool FunctionDecl::isEosioEvent()const { return hasAttr<EosioEventAttr>(); }
+std::string FunctionDecl::getEosioEvent()const { return getAttr<EosioEventAttr>()->getName(); }
+
 
 FunctionDecl *FunctionDecl::Create(ASTContext &C, DeclContext *DC,
                                    SourceLocation StartLoc,

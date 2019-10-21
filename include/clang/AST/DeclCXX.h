@@ -730,10 +730,17 @@ public:
   bool isEosioTable() const { return hasAttr<EosioTableAttr>(); }
   bool isEosioIgnore() const { return hasAttr<EosioIgnoreAttr>(); }
   bool hasEosioRicardian() const { return hasAttr<EosioRicardianAttr>(); }
+  bool isEosioSignal() const { return hasAttr<EosioSignalAttr>(); }
+  bool isEosioSlot() const { return hasAttr<EosioSlotAttr>(); }
+  bool isEosioEvent() const { return hasAttr<EosioEventAttr>(); }
+
   EosioActionAttr* getEosioActionAttr() const { return getAttr<EosioActionAttr>(); }
   EosioTableAttr*  getEosioTableAttr() const { return getAttr<EosioTableAttr>(); }
   EosioContractAttr*  getEosioContractAttr() const { return getAttr<EosioContractAttr>(); }
   EosioRicardianAttr*  getEosioRicardianAttr() const { return getAttr<EosioRicardianAttr>(); }
+  EosioSignalAttr* getEosioSignalAttr() const { return getAttr<EosioSignalAttr>(); }
+  EosioSlotAttr* getEosioSlotAttr() const { return getAttr<EosioSlotAttr>(); }
+  EosioEventAttr* getEosioEventAttr() const { return getAttr<EosioEventAttr>(); }
 
   CXXRecordDecl *getCanonicalDecl() override {
     return cast<CXXRecordDecl>(RecordDecl::getCanonicalDecl());
