@@ -734,7 +734,12 @@ public:
   EosioActionAttr* getEosioActionAttr() const { return getAttr<EosioActionAttr>(); }
   EosioTableAttr*  getEosioTableAttr() const { return getAttr<EosioTableAttr>(); }
   EosioContractAttr*  getEosioContractAttr() const { return getAttr<EosioContractAttr>(); }
-  std::string  getEosioAppName() const { return getAttr<EosioAppAttr>()->getName(); }
+  std::string  getEosioAppName() const {
+     if (isEosioApp())
+        return getAttr<EosioAppAttr>()->getName();
+     else
+        return getAttr<EosioContractAttr>()->getName();
+  }
   EosioRicardianAttr*  getEosioRicardianAttr() const { return getAttr<EosioRicardianAttr>(); }
 
   CXXRecordDecl *getCanonicalDecl() override {
@@ -2072,11 +2077,18 @@ public:
   bool isEosioAction() const { return hasAttr<EosioActionAttr>(); }
   bool isEosioNotify() const { return hasAttr<EosioNotifyAttr>(); }
   bool isEosioContract() const { return hasAttr<EosioContractAttr>(); }
+  bool isEosioApp() const { return hasAttr<EosioContractAttr>(); }
   bool hasEosioRicardian() const { return hasAttr<EosioRicardianAttr>(); }
   EosioActionAttr* getEosioActionAttr() const { return getAttr<EosioActionAttr>(); }
   EosioNotifyAttr* getEosioNotifyAttr() const { return getAttr<EosioNotifyAttr>(); }
   EosioContractAttr* getEosioContractAttr() const { return getAttr<EosioContractAttr>(); }
   EosioRicardianAttr* getEosioRicardianAttr() const { return getAttr<EosioRicardianAttr>(); }
+  std::string getEosioAppName()const {
+     if (isEosioApp())
+        return getAttr<EosioAppAttr>()->getName();
+     else
+        return getAttr<EosioContractAttr>()->getName();
+  }
 
   /// Returns true if the given operator is implicitly static in a record
   /// context.

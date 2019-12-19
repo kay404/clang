@@ -4012,7 +4012,12 @@ bool RecordDecl::isInjectedClassName() const {
 
 bool RecordDecl::isEosioIgnore() const { return hasAttr<EosioIgnoreAttr>(); }
 bool RecordDecl::isEosioApp() const { return hasAttr<EosioAppAttr>(); }
-std::string RecordDecl::getEosioAppName() const { return getAttr<EosioAppAttr>()->getName(); }
+std::string RecordDecl::getEosioAppName() const {
+   if (isEosioApp())
+      return getAttr<EosioAppAttr>()->getName();
+   else
+      return getAttr<EosioContractAttr>()->getName();
+}
 
 bool RecordDecl::isLambda() const {
   if (auto RD = dyn_cast<CXXRecordDecl>(this))
