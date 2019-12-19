@@ -991,18 +991,26 @@ def EosioWasmImport : InheritableAttr {
 }
 
 def EosioAction : InheritableAttr {
-   let Spellings = [CXX11<"eosio", "action">, GNU<"eosio_action">];
+   let Spellings = [CXX11<"eosio", "action">, Clang<"action">, GNU<"eosio_action">];
    let Args = [StringArgument<"name", 1>];
    let Subjects = SubjectList<[CXXRecord, CXXMethod]>;
    let Documentation = [EosioActionDocs];
 }
 
 def EosioTable : InheritableAttr {
-   let Spellings = [CXX11<"eosio", "table">, GNU<"eosio_table">];
+   let Spellings = [CXX11<"eosio", "table">, Clang<"table">, GNU<"eosio_table">];
    let Args = [StringArgument<"name", 1>];
    let Subjects = SubjectList<[CXXRecord]>;
    let MeaningfulToClassTemplateDefinition = 1;
    let Documentation = [EosioTableDocs];
+}
+
+def EosioApp : InheritableAttr {
+   let Spellings = [CXX11<"eosio", "app">, Clang<"app">, GNU<"eosio_app">];
+   let Args = [StringArgument<"name", 1>];
+   let Subjects = SubjectList<[CXXRecord, Namespace]>;
+   let MeaningfulToClassTemplateDefinition = 1;
+   let Documentation = [EosioContractDocs];
 }
 
 def CXX11NoReturn : InheritableAttr {
